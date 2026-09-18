@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>邀请函</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+* {
+margin: 0;
+padding: 0;
+box-sizing: border-box;
+}
+body {
+font-family: system-ui, sans-serif;
+overflow-x: hidden;
+background:#fff;
+}
+.page {
+min-height: 100vh;
+display: none;
+padding: 20px;
+}
+.page.active {
+display: block;
+}
+.hidden {
+display: none !important;
+}
+/*信封样式【动画调慢】*/
+.envelope-wrap {
+width: 340px;
+height: 260px;
+margin: 100px auto;
+position: relative;
+cursor: pointer;
+}
+.envelope {
+width: 100%;
+height: 100%;
+background: #f8c8dc;
+border-radius: 0 0 14px 14px;
+box-shadow: 0 10px 28px rgba(0,0,0,0.14);
+}
+.envelope-flap {
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 145px;
+background: #f4b8ce;
+clip-path: polygon(0 0, 100% 0, 50% 100%);
+transform-origin: top center;
+transition: transform 4s ease;
+z-index: 2;
+}
+.envelope-wrap.open .envelope-flap {
+transform: rotateX(180deg);
+}
+.invite-card {
+position: absolute;
+width: 280px;
+left: 30px;
+top: 12px;
+background: #fff8fa;
+padding: 28px 20px;
+border-radius: 10px;
+z-index: 1;
+transform: translateY(0px);
+transition: transform 4s ease 1s;
+opacity: 0;
+line-height:1.75;
+}
+.envelope-wrap.open .invite-card {
+transform: translateY(-140px);
+opacity: 1;
+}
+/*情绪卡片*/
+.emo-card{
+transition: 0.2s;
+}
+.emo-card.active{
+transform: scale(0.97);
+box-shadow: inset 0 0 0 3px #ec4899;
+}
+/*高级墨紫夜空页*/
+.sky-page {
+background:
+radial-gradient(circle at 10% 20%, rgba(255,255,255,0.08) 0 8%, transparent 9%),
+radial-gradient(circle at 80% 10%, rgba(255,255,255,0.06) 0 6%, transparent 7%),
+linear-gradient(180deg, #05030a 0%, #100b20 18%, #1a1035 38%, #2e1d5a 58%, #1e1540 80%, #080610 100%);
+}
+.sky-container {
+position: relative;
+min-height: 70vh;
+border-radius: 16px;
+overflow: hidden;
+background:
+radial-gradient(circle at 18% 24%, rgba(255,255,255,0.12) 0 10%, transparent 11%),
+radial-gradient(circle at 82% 18%, rgba(255,255,255,0.08) 0 7%, transparent 8%),
+linear-gradient(180deg, #05030a 0%, #100b20 22%, #1a1035 45%, #2e1d5a 65%, #1e1540 85%, #080610 100%);
+}
+/*银河：淡青色斜带*/
+.milky-way {
+position: absolute;
+width: 160%;
+height: 70%;
+top: -20%;
+left: -30%;
+background:
+radial-gradient(ellipse at center, rgba(175,235,255,0.18) 0 8%, rgba(175,235,255,0.12) 8 18%, rgba(255,255,255,0.06) 18 35%, transparent 35%);
+transform: rotate(-12deg);
+filter: blur(18px);
+pointer-events: none;
+}
+/*云絮*/
+.cloud {
+position: absolute;
+width: 180px;
+height: 60px;
+background: radial-gradient(ellipse at center, rgba(255,255,255,0.16) 0 25%, transparent 50%);
+border-radius: 50%;
+filter: blur(12px);
+animation: drift 25s infinite ease-in-out;
+pointer-events: none;
+}
+.cloud-1 {
+top: 10%;
+left: 5%;
+animation-delay: 0s;
+}
+.cloud-2 {
+top: 18%;
+right: 8%;
+animation-delay: 6s;
+}
+.cloud-3 {
+top: 30%;
+left: 40%;
+animation-delay: 12s;
+}
+@keyframes drift {
+0% { transform: translateX(0) translateY(0); opacity: 0.35; }
+50% { transform: translateX(12px) translateY(-6px); opacity: 0.55; }
+100% { transform: translateX(0) translateY(0); opacity: 0.35; }
+}
+/*奶黄色弯月*/
+.moon {
+position: absolute;
+top: 12%;
+right: 12%;
+width: 48px;
+height: 48px;
+border-radius: 50%;
+background: transparent;
+cursor: pointer;
+transition: transform 0.2s;
+}
+.moon::before {
+content: "";
+position: absolute;
+top: 0;
+left: 0;
+width: 48px;
+height: 48px;
+border-radius: 50%;
+box-shadow: inset -16px 0 0 #fffbeb, inset -10px 0 0 #fef3c7;
+filter: drop-shadow(0 0 12px rgba(255,251,235,0.9)) drop-shadow(0 0 24px rgba(253,246,227,0.6));
+}
+.moon:hover {
+transform: scale(1.15);
+}
+/*碎金星星*/
+.star-gold {
+position: absolute;
+width: 2px;
+height: 2px;
+background: #ffd700;
+border-radius: 50%;
+box-shadow: 0 0 4px #ffd700, 0 0 8px rgba(255,215,0,0.6);
+cursor: pointer;
+animation: twinkle 2.2s infinite alternate;
+transition: transform 0.2s, box-shadow 0.2s;
+}
+.star-gold:hover {
+transform: scale(1.8);
+box-shadow: 0 0 8px #ffd700, 0 0 16px rgba(255,215,0,0.8);
+}
+@keyframes twinkle {
+0% { opacity: 0.25; }
+100% { opacity: 1; }
+}
+/*弹窗 全部改为淡蓝色*/
+.bless-modal{
+position:fixed;
+left:50%;
+top:50%;
+transform: translate(-50%,-50%) scale(0);
+padding:20px 28px;
+background:#e6f2ff;
+border-radius:16px;
+box-shadow:0 6px 24px rgba(0,0,0,0.15);
+z-index:999;
+max-width:85%;
+text-align:center;
+transition: transform 1s ease;
+}
+.bless-modal.show{
+transform: translate(-50%,-50%) scale(1);
+}
+/*猫猫酒馆页*/
+.tavern-page {
+background: linear-gradient(180deg, #f7ede2 0%, #e8d5c4 100%);
+}
+.tavern-container {
+width: 100%;
+max-width: 360px;
+margin: 0 auto;
+background: #fffaf6;
+border-radius: 20px;
+padding: 24px;
+box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+.cat {
+width: 72px;
+height: 72px;
+object-fit: contain;
+display: block;
+margin: 0 auto;
+cursor: pointer;
+}
+.material-box {
+display: flex;
+flex-wrap: wrap;
+gap: 10px;
+justify-content: center;
+margin-bottom: 16px;
+}
+.material-tag{
+width: 52px;
+height: 52px;
+padding: 8px;
+border-radius: 12px;
+border: 2px solid #d6c4b4;
+background:#f8efe6;
+cursor:pointer;
+transition:0.2s;
+display: flex;
+align-items: center;
+justify-content: center;
+}
+.material-tag img {
+width: 36px;
+height: 36px;
+object-fit: contain;
+}
+.material-tag.selected{
+background:#d97706;
+border-color:#b45309;
+box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.25);
+}
+.drink-card {
+margin-top: 16px;
+padding: 18px;
+background: #fff0e6;
+border-radius: 16px;
+text-align: center;
+min-height: 100px;
+}
+.drink-name {
+font-size: 20px;
+font-weight: bold;
+color: #d97706;
+margin-bottom: 8px;
+}
+.drink-formula {
+font-size: 14px;
+color: #78716c;
+line-height: 1.6;
+}
+/*第五页浮层弹窗 淡蓝色*/
+.popup-item{
+position:fixed;
+padding:16px 24px;
+background:#e6f2ff;
+border-radius:12px;
+box-shadow:0 4px 12px rgba(0,0,0,0.1);
+z-index:998;
+animation:popIn 0.6s ease forwards;
+max-width:85%;
+}
+@keyframes popIn{
+0%{transform:scale(0);opacity:0;}
+100%{transform:scale(1);opacity:1;}
+}
+button{
+background:#ec4899;
+color:white;
+border:none;
+padding:12px 20px;
+border-radius:8px;
+cursor:pointer;
+margin:4px;
+}
+button:hover{
+background:#db2777;
+}
+button.secondary{
+background:#6366f1;
+}
+</style>
+</head>
+<body>
+	<audio id="bgm" loop></audio>
+		<source src="bgm.mp3" type="audio/mpeg">
+<!--背景音乐标签，src替换为你的音频地址-->
+<!--页面1 邀请函信封-->
+<div id="page1" class="page active">
+<div class="text-center pt-8">
+<h2 class="text-2xl text-pink-600 font-bold">✨邀请函✨</h2>
+<div class="envelope-wrap" id="envelopeBox">
+<div class="envelope-flap"></div>
+<div class="envelope"></div>
+<div class="invite-card text-center text-sm text-gray-700">
+<h3 class="text-lg font-bold text-pink-700 mb-3">致你的一封小信</h3>
+<p>
+恭喜小刘女士🌍<br>
+地球又稳稳转到了你出生的那天。<br>
+无敌小刘一路破关斩将，跌跌撞撞也步履不停，正式抵达 22 岁。<br>
+这一年有顺遂也有磕绊，有释然也有迷茫，所有经历都拼凑成现在独一无二的你。不必活成世俗给出的标准答案，允许松弛，允许摇摆，不必时刻强悍。<br>
+新的一岁，继续做自己世界里的主角，自在热烈，随心而行。愿你所见皆温柔，所想皆如愿，大胆去解锁接下来的人生副本。我会一直在，岁岁都陪在你身边。
+</p>
+<p class="mt-4 text-xs text-gray-500">恭喜小刘同学进入新篇章🎉</p>
+<button class="mt-4" onclick="goPage(2)">我看看怎么个事</button>
+</div>
+</div>
+<p class="text-sm text-gray-500">打开✉️</p>
+</div>
+</div>
+<script>
+	document.addEventListener('click',( )=>{
+		document.getElementById('bgm').play();
+})    </script>
+<!--页面2 情绪碎片页-->
+<div id="page2" class="page">
+<div class="max-w-lg mx-auto px-4 py-10">
+<h2 class="text-xl font-bold text-pink-600 text-center mb-2">今天怎么样~</h2>
+<p class="text-sm text-gray-500 text-center mb-8">极限四选一，查看我写给你的雷霆语录</p>
+<div class="grid grid-cols-2 gap-4 mb-8">
+<div class="emo-card p-5 rounded-xl border-2 border-yellow-300 bg-yellow-50 text-center cursor-pointer" data-emo="happy">
+<div class="text-3xl mb-2">😄</div>
+<div>开心</div>
+</div>
+<div class="emo-card p-5 rounded-xl border-2 border-red-300 bg-red-50 text-center cursor-pointer" data-emo="angry">
+<div class="text-3xl mb-2">😤</div>
+<div>生气</div>
+</div>
+<div class="emo-card p-5 rounded-xl border-2 border-blue-300 bg-blue-50 text-center cursor-pointer" data-emo="sad">
+<div class="text-3xl mb-2">😔</div>
+<div>难过</div>
+</div>
+<div class="emo-card p-5 rounded-xl border-2 border-purple-300 bg-purple-50 text-center cursor-pointer" data-emo="heartbroken">
+<div class="text-3xl mb-2">💔</div>
+<div>伤心</div>
+</div>
+</div>
+<div id="quoteBox" class="hidden p-4 rounded-xl bg-gray-50 mb-8 text-center text-gray-700"></div>
+<div class="flex justify-center gap-3">
+<button onclick="resetEmoPage()" class="secondary">我选错了我要重新选！</button>
+<button onclick="goPage(3)">下一个</button>
+</div>
+</div>
+</div>
+<!--页面3 墨紫高级星空页-->
+<div id="page3" class="page sky-page">
+<div class="max-w-lg mx-auto px-2 py-6">
+<h2 class="text-xl font-bold text-white text-center mb-4">一闪一闪亮晶晶，请你点击小星星</h2>
+<div class="sky-container" id="skyWrap">
+<div class="milky-way"></div>
+<div class="cloud cloud-1"></div>
+<div class="cloud cloud-2"></div>
+<div class="cloud cloud-3"></div>
+<div class="moon" id="moonBtn"></div>
+</div>
+<div class="mt-4 flex gap-2 justify-center">
+<button onclick="goPage(2)">我再回去看看</button>
+<button onclick="goPage(4)">下一个</button>
+</div>
+</div>
+</div>
+<!--弹窗容器-->
+<div id="modalBox" class="bless-modal">
+<p id="modalText"></p>
+<button class="mt-4" onclick="closeModal()">已阅</button>
+</div>
+<!--页面4 猫猫酒馆页-->
+<div id="page4" class="page tavern-page">
+<div class="min-h-screen flex flex-col items-center justify-center py-8">
+<div class="tavern-container">
+<h2 class="text-xl font-bold text-amber-700 text-center mb-2">猫猫酒馆（有毛不要钱~）</h2>
+<p class="text-sm text-gray-500 text-center mb-3">挑选最多3种原料，猫老板在线为您服务</p>
+<div id="materialBox" class="material-box">
+<!--原料图案JS生成-->
+</div>
+<!--猫猫图片容器-->
+<img id="catBtn" class="cat" src="https://cdn-icons-png.flaticon.com/512/1046/1046754.png" alt="猫猫酒保">
+<p class="text-center text-xs text-amber-600 mt-1">🐱酒保猫猫</p>
+<div class="drink-card" id="drinkCard">
+<p class="text-gray-400">等待调配你的专属特调...</p>
+</div>
+<div class="flex gap-2 justify-center mt-4">
+<button onclick="goPage(3)">喝多了我看见星星了</button>
+<button id="nextBtn" class="hidden" onclick="goPage(5)">小彩蛋</button>
+</div>
+</div>
+</div>
+</div>
+<!--页面5 满屏弹窗祝福-->
+<div id="page5" class="page">
+<div id="popupWrap"></div>
+</div>
+<script>
+//页面切换
+function goPage(num){
+document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+document.getElementById("page"+num).classList.add("active");
+if(num===3) renderSky();
+if(num===4) initTavern();
+if(num===5) popBless();
+}
+//信封点击：打开信封 【已移除audio相关报错代码】
+document.getElementById("envelopeBox").onclick=function(){
+this.classList.add("open");
+};
+//情绪碎片逻辑
+let selectedEmo=null;
+const emoQuotes={
+happy:[
+"生日当然要开心。",
+"今天你生日~送上我祝福。",
+"什么！刘静晨今天过生日，陈助理把我的行程推掉，我要去给刘静晨过生日",
+"今天你生日~送上我祝福~希望你永远笑嘻嘻~"
+],
+angry:[
+"为什么是生气？",
+"是谁，我去骂他",
+"不要对我凶凶，我的心会痛痛",
+"没有什么事是一个巴掌发泄不了的，如果有那就扇两巴掌✋️"
+],
+sad:[
+"别流泪，妆会花",
+"OMG，谁碰我姐妹一根羽毛，我定毁他整个天堂",
+"放空坏情绪，留给自己一点喘息治愈时间。",
+"内耗啥呢，不如外耗别人"
+],
+heartbroken:[
+"你有一颗大心脏",
+"难熬时刻终会变淡，新的温暖会奔赴向你。",
+"一个人的夜，你的心，在悄悄破碎（不允许🚫）",
+"霸总发言：（穿上西装，端起酒杯）女人，不许为别人心碎（壁咚你，挑起下巴）"
+]
+};
+document.querySelectorAll(".emo-card").forEach(card=>{
+card.onclick=function(){
+document.querySelectorAll(".emo-card").forEach(c=>c.classList.remove("active"));
+this.classList.add("active");
+selectedEmo=this.dataset.emo;
+const arr=emoQuotes[selectedEmo];
+const ran=arr[Math.floor(Math.random()*arr.length)];
+document.getElementById("quoteBox").innerText=ran;
+document.getElementById("quoteBox").classList.remove("hidden");
+}
+});
+function resetEmoPage(){
+selectedEmo=null;
+document.querySelectorAll(".emo-card").forEach(c=>c.classList.remove("active"));
+document.getElementById("quoteBox").classList.add("hidden");
+}
+//星空
+const blessPool = [
+"小小刘静晨，越来越美丽！",
+"生日快乐！！！",
+"新的一岁当然是健健康康啦",
+"活力满满满满满",
+"恭喜小刘玩家触发奖励机制，幸运值+10",
+"拜托money不要对你冷冰冰",
+"恭喜玩家触发暴击（就是恭喜你一下嘻嘻）",
+"钱来钱来，钱从四面八方来",
+"搞钱被动 buff 生效，收入持续暴涨，",
+"怎么点到广告了",
+"一路过关斩将，我们刘静晨简直勇士来的",
+"小人退散！起立跟我一起踩小人，并说出“我踩踩踩”",
+"如果你点到了这条，那么请你私信我，说出一个喜欢的东西",
+"早点实现财富自由！！！",
+"阻碍全部清理，收益超额到手",
+"hi，刘静晨，生日快乐",
+"生日快乐，永远不死——来自我的同事",
+"好吧，这句是上班偷偷写的，生日快乐（小小声版），",
+"其实刘静晨是隐形富豪来的吧",
+"笑嘻嘻，很调皮，哭唧唧，泪点低（好吧你泪点不低）",
+"写不出煽情的话的时候是要有点广告的(#^.^#)，",
+"也不知道你能不能看到这条，生日快乐，不止生日",
+"可以带上围巾去海边出片哦~",
+"恭喜玩家解锁新地图——充电站，一直活力满满哦",
+"记录美好时光，现在让我们刘静晨和我的文字拍个照吧",
+"今天生日怎么能不许愿呢",
+"这句话是哪个星星？",
+"这是一颗流星，所有愿望都会实现",
+"我是神灯，我能满足你1个愿望",
+"刚刚的神灯是假的，什么？你没点到那个神灯，那没事了",
+"哈哈哈哈哈哈终于让我给你过上生日了",
+"解锁人生新剧情！许个愿吧",
+"加油诡秘，喜欢什么就去抢吧，天上是不会掉馅饼的",
+"前行阻碍全部清除，升级进度一路狂飙，",
+"如果你点到了这条，那么请你私信我，说出一个喜欢的东西",
+"平安光环全程笼罩，霉运碎片全部销毁，",
+"如果你点到了这条，那么请你私信我，说出一个喜欢的东西",
+"生活剧本多撒糖，虐心剧情全部跳过，",
+"能量储备永不枯竭，各类好运自动投递，",
+"负面数据包全部过滤，甜蜜日常循环播放，",
+"如果你点到了这条，那么请你私信我，说出一个喜欢的东西",
+"身体续航超长待机，病痛弹窗永不弹出，",
+"嘻嘻嘻未中奖哦~",
+"我是一颗内向的星星，谢谢你找到我",
+"人生地图持续拓展，新的关卡轻松拿下，",
+"松弛感常驻系统，内耗进程强制终止，",
+"好运信号永不中断，美好事件持续加载，",
+"现实奖励多多派发，顺遂状态牢牢锁住，",
+"欢迎玩家来到幸福快跑频道，接下来一个月你将体验不同的幸福",
+"如果你点到了这条，那么请你私信我，说出一个喜欢的东西，"
+];
+const moonBlessing = "如果今天有月亮，月亮替你收藏了今天的温柔，往后日子皆有光亮。如果没有，没关系，小太阳刘静晨会拯救黑暗的世界";
+function renderSky(){
+const wrap = document.getElementById("skyWrap");
+wrap.querySelectorAll(".star-gold").forEach(s=>s.remove());
+//生成星星
+for(let i=0;i<140;i++){
+const star = document.createElement("div");
+star.className = "star-gold";
+star.dataset.bless = blessPool[Math.floor(Math.random()*blessPool.length)];
+star.style.left = (Math.random()*100)+"%";
+star.style.top = (Math.random()*100)+"%";
+star.style.width = (0.7+Math.random()*2.2)+"px";
+star.style.height = star.style.width;
+star.style.animationDelay = Math.random()*3+"s";
+wrap.appendChild(star);
+}
+//月亮点击
+document.getElementById("moonBtn").onclick = ()=> showModal(moonBlessing);
+//事件委托：所有星星统一点击，不会漏
+wrap.onclick = function(e){
+if(e.target.classList.contains("star-gold")){
+showModal(e.target.dataset.bless);
+}
+}
+}
+//弹窗
+function showModal(text){
+document.getElementById("modalText").innerText = text;
+document.getElementById("modalBox").classList.add("show");
+}
+function closeModal(){
+document.getElementById("modalBox").classList.remove("show");
+}
+// ==========猫猫酒馆 【临时禁用帧动画，避免图片缺失导致JS卡死】 ==========
+const catFrameList = [ "frame1.png", "frame2.png", "frame3.png", "frame4.png", "frame5.png", "frame6.png", "frame7.png", "frame8.png", "frame9.png", ];
+const catDefaultImg = "https://cdn-icons-png.flaticon.com/512/1046/1046754.png";
+let catAnimTimer = null;
+const materialList = [
+{name:"荔枝", icon:"https://cdn-icons-png.flaticon.com/512/1999/1999663.png"},
+{name:"草莓", icon:"https://cdn-icons-png.flaticon.com/512/415/415733.png"},
+{name:"桂花", icon:"https://cdn-icons-png.flaticon.com/512/2919/2919990.png"},
+{name:"桃子", icon:"https://cdn-icons-png.flaticon.com/512/135/135640.png"},
+{name:"薄荷", icon:"https://cdn-icons-png.flaticon.com/512/614/614049.png"},
+{name:"橙子", icon:"https://cdn-icons-png.flaticon.com/512/415/415744.png"},
+{name:"气泡", icon:"https://cdn-icons-png.flaticon.com/512/2851/2851692.png"},
+{name:"蜂蜜", icon:"https://cdn-icons-png.flaticon.com/512/2927/2927204.png"},
+];
+let selectedMaterials = [];
+const cocktailNames = [
+"晚星絮语","云间甜梦","晚风来信","橘色潮汐","月下莓酿",
+"雾屿清欢","蜜语流年","星落桃河","浅梦气泡","桂月回响"
+];
+function initTavern(){
+selectedMaterials = [];
+document.getElementById("nextBtn").classList.add("hidden");
+document.getElementById("drinkCard").innerHTML = `<p class="text-gray-400">等待调配你的专属特调...</p>`;
+const catImg = document.getElementById("catBtn");
+catImg.src = catDefaultImg;
+if(catAnimTimer) clearInterval(catAnimTimer);
+const box = document.getElementById("materialBox");
+box.innerHTML = "";
+materialList.forEach(mat=>{
+const span = document.createElement("span");
+span.className = "material-tag";
+span.dataset.mat = mat.name;
+span.innerHTML = `<img src="${mat.icon}" alt="${mat.name}">`;
+span.onclick = ()=>{
+const m = span.dataset.mat;
+if(selectedMaterials.includes(m)){
+selectedMaterials = selectedMaterials.filter(x=>x!==m);
+span.classList.remove("selected");
+}else{
+if(selectedMaterials.length >=3) return;
+selectedMaterials.push(m);
+span.classList.add("selected");
+}
+};
+box.appendChild(span);
+});
+const catBtn = document.getElementById("catBtn");
+catBtn.onclick = function(){
+if(selectedMaterials.length <2){
+document.getElementById("drinkCard").innerHTML = `<p class="text-amber-500">至少选择2种原料才能调酒哦✨</p>`;
+return;
+}
+//直接完成调酒，不执行帧动画，不会卡死JS
+const drinkName = cocktailNames[Math.floor(Math.random()*cocktailNames.length)];
+const formulaStr = selectedMaterials.join(" + ");
+document.getElementById("drinkCard").innerHTML = `
+<div class="drink-name">🍸 ${drinkName}</div>
+<div class="drink-formula">你的配方：${formulaStr}</div>
+`;
+document.getElementById("nextBtn").classList.remove("hidden");
+}
+}
+//满屏祝福页
+function popBless(){
+const wrap=document.getElementById("popupWrap");
+wrap.innerHTML="";
+const words=["身体元气爆棚，",
+"吃好睡香少疲惫",
+"活力时刻在线",
+"小病通通退散",
+"平安常驻身边",
+"状态永远在线",
+"身心轻松自在",
+"天天精神满满",
+"无灾无扰无忧",
+"体魄稳稳当当",
+"好运护住身体",
+"每天活力拉满",
+"远离病痛困扰",
+"身心自在舒展",
+"岁岁健健康康",
+"钱包持续膨胀",
+"小钱大钱都来",
+"财运疯狂冒泡",
+"进账源源不断",
+"存款节节上涨",
+"副业多多变现",
+"财气撞个满怀",
+"搞钱顺顺利利",
+"兜里永远有余",
+"暴富进度加速",
+"财运不掉链子",
+"收入不停加码",
+"富贵悄悄降临",
+"招财又纳好运",
+"日子富足开心",
+"生日快乐",
+"机遇主动上门",
+"生日快乐",
+"工作得心应手",
+"难题一键闪开",
+"一路闪闪发光",
+"前途亮亮堂堂",
+"努力皆有回报",
+"解锁新的成就",
+"生日快乐",
+"步步高往上冲",
+"冲冲冲",
+"贵人多多相助",
+"实力被人看见",
+"前路繁花相伴",
+"遇见满心欢喜",
+"被爱好好眷顾",
+"双向奔赴很甜",
+"恋爱甜度超标",
+"遇见靠谱良人",
+"岁岁有爱相伴",
+"心动常有回响",
+"相处自在舒服",
+"爱意岁岁绵绵",
+"甜蜜日常常驻",
+"真心被人珍惜",
+"岁岁皆有偏爱",
+"浪漫如约而至",
+"欢喜常伴左右",
+"爱意不被辜负",
+"平安又多金",
+"健康又暴富",
+"身体棒财运旺",
+"有爱又有钱",
+"事业爱情双甜",
+"安康事事顺心",
+"搞钱恋爱皆赢",
+"身安事业腾飞",
+"财旺爱意满满",
+"好运全部就位",
+"烦恼全部跑路",
+"快乐无限续杯",
+"霉运通通闪开",
+"日子闪闪发光",
+"惊喜不停掉落",
+"事事称心如意",
+"岁岁自在欢喜",
+"状态闪闪发光",
+"吃嘛嘛香睡得香",
+"身体自带保护膜",
+"活力天天不打烊",
+"病痛全部绕道走",
+"平安时刻在线",
+"元气天天充值",
+"身心没有内耗",
+"岁岁自在安康",
+"财运疯狂上分",
+"钞票哗哗进袋",
+"小金库持续扩容",
+"赚钱轻轻松松",
+"财气四处环绕",
+"收益源源不断",
+"暴富慢慢就位",
+"钱财稳稳落袋",
+"财运一路开挂",
+"富足喜乐常伴",
+"职场一路开挂",
+"少加班多收获",
+"能力节节变强",
+"机遇接踵而至",
+"事业闪闪发光",
+"前路一路坦荡",
+"努力皆得回响",
+"步步收获惊喜",
+"工作顺风顺水",
+"前程万丈光芒",
+"贵人时常关照",
+"新成就不停解锁",
+"职场少遇糟心事",
+"事业蒸蒸日上",
+"邂逅满心的温柔",
+"被爱意牢牢包围",
+"恋爱甜甜蜜蜜",
+"双向奔赴不缺席",
+"遇见专属偏爱",
+"岁岁与欢喜相伴",
+"真心得到回应",
+"浪漫不缺惊喜",
+"爱意稳稳续航",
+"相处轻松又甜蜜",
+"良缘如期而至",
+"心动岁岁不停",
+"爱意岁岁安然",
+"平安事业双丰收",
+"健康财运两手抓",
+"有爱有钱有底气",
+"身安情甜财也旺",
+"事业红火爱也甜",
+"康健富足常欢喜",
+"好运包围你的日常",
+"生活处处是小惊喜",
+"烦心事统统退退退",
+"快乐持续加载中",
+"平安护好岁岁朝夕",
+"身体少点小毛病",
+"活力肆意生长",
+"岁岁无病少忧",
+"身心时刻松弛",
+"平安不缺席每一天",
+"财运持续到账",
+"各种小财不断来",
+"存款只增不减",
+"搞钱一路顺风顺水",
+"财福撞进怀里",
+"生日快乐",
+"赚钱机会多多",
+"财运常驻生活",
+"钱财多多益善",
+"事业稳步起飞",
+"职场好运加持",
+"难题全部化解",
+"一路收获高光",
+"耕耘皆有硕果",
+"前路机遇不断",
+"生日快乐",
+"生日快乐",
+"生日快乐",
+"好运眷顾前程",
+"遇见满眼是你的人",
+"爱意岁岁不降温",
+"甜蜜日常不打烊",
+"真心被好好对待",
+"岁岁有浪漫相伴",
+"相爱自在舒心",
+"美好缘分奔你而来",
+"生日快乐",
+"被爱包围岁岁年年",
+"平安有爱又富足",
+"健康事业皆如愿",
+"情甜财旺万事欢",
+"身强业顺爱圆满",
+"好运常驻你的生活",
+"日子甜滋滋美滋滋",
+"糟心事全部远离你",
+"大大小小好运来敲门",
+"平安包裹你的岁岁",
+"身体状态时刻满分",
+"远离疲惫与小病痛",
+"元气满满过好每日",
+"平安相伴朝朝暮暮",
+"财富机会多多降临",
+"收入一路向上飙升",
+"钱包满满幸福感拉满",
+"搞钱路上一路畅通",
+"财运时时向你靠拢",
+"事业一路过关斩将",
+"新机遇不停找上门",
+"付出都能拿到回报",
+"职场一路顺意舒心",
+"前程一路繁花似锦",
+"生日快乐",
+"双向的喜欢如期而至",
+"岁岁被温柔爱意包裹",
+"缘分到来恰逢其时",
+"爱与好运双向奔赴",
+"平安健康财运常随",
+"事业爱情双双在线",
+"有钱有爱身体倍棒",
+"岁岁欢喜万事尽兴",
+"生活全是正向小彩蛋",
+"生日快乐",
+"日日都有小确幸",
+"岁岁过得热热闹闹",
+"万事皆得称心如意",
+"快乐不用刻意寻找",
+"好运时刻向你倾斜",
+"生日快乐",
+"生日快乐",
+"财运时时有新惊喜",
+"生日快乐",
+"爱意岁岁温热绵长",
+"烦恼全部自动清零",
+"美好事物不停发生",
+"生日快乐",
+"岁岁过得自在快活",
+"所有期待慢慢成真",
+"好运持续无限续航",
+"小美好源源不断",
+"顺遂环绕朝朝暮暮",
+"喜乐填满日常碎片"];
+for(let i=0;i<220;i++){
+const d=document.createElement("div");
+d.className="popup-item";
+d.innerText=words[Math.floor(Math.random()*words.length)];
+d.style.left=Math.random()*80+"%";
+d.style.top=Math.random()*80+"%";
+wrap.appendChild(d);
+}
+}</script>
+</body>
+</html>
